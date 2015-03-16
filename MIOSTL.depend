@@ -1,0 +1,25 @@
+# depslib dependency file v1.0
+1426518500 source:d:\github\miostl\miostl\main.cpp
+	<iostream>
+	"Vector.h"
+
+1426517971 source:d:\github\miostl\miostl\vector_mio.cpp
+	"vector_mio.h"
+
+1426517994 d:\github\miostl\miostl\vector_mio.h
+
+1426517971 d:\github\miostl\miostl\vector_mio.cpp
+	"vector_mio.h"
+
+1426518320 d:\github\miostl\miostl\vector.h
+	"mio_vector.h"
+	"mio_vector.cpp"
+
+1426518635 d:\github\miostl\miostl\mio_vector.h
+
+1426518252 d:\github\miostl\miostl\mio_vector.cpp
+	"mio_vector.h"
+
+1426518252 source:d:\github\miostl\miostl\mio_vector.cpp
+	"mio_vector.h"
+
