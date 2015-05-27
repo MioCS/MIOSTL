@@ -23,3 +23,15 @@
 1426518252 source:d:\github\miostl\miostl\mio_vector.cpp
 	"mio_vector.h"
 
+1432641652 source:d:\github\miostl\main.cpp
+	<iostream>
+	<memory>
+	"mio_allocator.h"
+
+1432642263 d:\github\miostl\mio_allocator.h
+	<new>
+	<cstddef>
+	<cstdlib>
+	<climits>
+	<iostream>
+

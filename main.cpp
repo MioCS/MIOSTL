@@ -1,11 +1,21 @@
+#include "mio_allocator.h"
 #include <iostream>
-#include "Vector.h"
+#include <vector>
 
 using namespace std;
 
 int main()
 {
-    mio::vector<int> s(10, 2);
-    cout << s[2];
+    int nums[5] = {1, 2, 3, 4, 5};
+
+    vector<int, mio::allocator<int>> numV(nums, nums + 5);
+
+    for(auto i : numV)
+    {
+        cout << i << ends;
+    }
+
+    cout << int(3);
+
     return 0;
 }
