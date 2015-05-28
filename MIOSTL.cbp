@@ -32,10 +32,9 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="Vector.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="mio_vector.cpp" />
-		<Unit filename="mio_vector.h" />
+		<Unit filename="mio_allocator.h" />
+		<Unit filename="mio_construct.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
