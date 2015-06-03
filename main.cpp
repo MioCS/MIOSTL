@@ -1,29 +1,37 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <new>
+#include "mio_alloc.h"
 
 using namespace std;
 
+template <int x>
+class A
+{
+public:
+    static void *allocate(size_t n)
+    {
+        return std::malloc(n);
+    }
+};
+
+typedef mio::__default_alloc_template<false, 0> second_alloc;
+
 int main()
 {
-    enum mm{x, y};
+    //void *p = A<3>::allocate(3);
 
-    mm d;
-    d = x;
+    void *p = second_alloc::allocate(3);
+    cout << second_alloc::get_heapSize() << endl;
 
-    cout << d;
-    /*
-    int nums[5] = {1, 2, 3, 4, 5};
-
-    vector<int> numV(nums, nums + 100);
-
-    for(auto i : numV)
+    for(int i = 0; i < 18; ++i)
     {
-        cout << i << ends;
+        second_alloc::allocate(3);
     }
+    cout << second_alloc::get_heapSize() << endl;
 
-    cout << int(3);
-    */
+    //second_alloc::deallocate(p, 0);
 
     return 0;
 }

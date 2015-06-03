@@ -11,6 +11,7 @@ using namespace std;
 
 namespace mio
 {
+
 void out_of_memory()
 {
     cerr << "out of memory" << endl;
