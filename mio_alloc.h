@@ -247,7 +247,7 @@ void *__default_alloc_template<threads, inst>::refill(size_t n)
     *myFreeList = nextObj = reinterpret_cast<obj *>(chunk + n);  //
 
     // 在获得内存块中构造freelist
-    for(int i = 1; i < nobjs - 1; ++i)
+    for(int i = 1; i < nobjs; ++i)
     {
         currentObj = nextObj;
         /// 为了能以currentObj为基准正确移动n个字节，需要将其强制转换为char*
