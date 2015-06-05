@@ -32,10 +32,12 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="iter_test.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="mio_alloc.h" />
 		<Unit filename="mio_allocator.h" />
 		<Unit filename="mio_construct.h" />
+		<Unit filename="mio_traits.h" />
 		<Unit filename="mio_uninitialized.h" />
 		<Extensions>
 			<code_completion />
