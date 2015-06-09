@@ -2,24 +2,14 @@
 #include <vector>
 #include <memory>
 #include <new>
+#include "mio_traits.h"
 
-//
 using namespace std;
-
-template <typename T>
-void func()
-{
-    cout << "p" << endl;
-}
-
-template <typename T>
-void func<T*>()
-{
-    cout << "r" << endl;
-}
 
 int main()
 {
+
+    typename mio::IterTraits<vector<int>>::value_type t;
 
     return 0;
 }
