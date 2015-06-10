@@ -2,14 +2,20 @@
 #include <vector>
 #include <memory>
 #include <new>
-#include "mio_traits.h"
+#include "mio_uninitialized.h"
 
 using namespace std;
 
 int main()
 {
+    try
+    {
 
-    typename mio::IterTraits<vector<int>>::value_type t;
+    }
+    catch(exception)
+    {
+
+    }
 
     return 0;
 }

@@ -2,25 +2,25 @@
 #define MIO_UNINITIALIZED_H_INCLUDED
 
 #include "mio_construct.h"
-#include <algorithm>
-#include <type_traits>
+#include <type_traits>  // __true_type
+#include <exception>
 
 namespace mio {
 
 // 以下为uninitialized_fill_n函数实现
 
 // POD类型构造
-template <class ForwardIterator first, class Size, class T>
+template <class ForwardIterator, class Size, class T>
 inline ForwardIterator
-__uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, __true_type)
+__uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, std::__true_type)
 {
     return std::fill_n(first, n, x);
 }
 
 // 非POD类型构造
-template <class ForwardIterator first, class Size, class T>
+template <class ForwardIterator, class Size, class T>
 inline ForwardIterator
-__uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, __false_type)
+__uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, std::__false_type)
 {
     ForwardIterator cur = first;
     Size index = n;
@@ -32,11 +32,11 @@ __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, __false_ty
             construct(&*cur, x);
         }
     }
-    catch (exception)
+    catch (std::exception)
     {
         ++n, --cur;
 
-        for(; n <= nindex; ++n, --cur)
+        for(; n <= index; ++n, --cur)
         {
             destory(&*cur);
         }
@@ -45,7 +45,7 @@ __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T &x, __false_ty
     return cur;
 }
 
-template <class ForwardIterator first, class Size, class T, class T1>
+template <class ForwardIterator, class Size, class T, class T1>
 inline ForwardIterator
 __uninitialized_fill_n(ForwardIterator first, Size n, const T&x, T1*)
 {
@@ -62,6 +62,7 @@ uninitialized_fill_n(ForwardIterator first, Size n, const T &x)
     return __uninitialized_fill_n(first, n, x, value_type(x));
 }
 
+/*
 // 以下为uninitialized_copy函数实现
 
 template <class InputIterator, class ForwardIterator>
@@ -167,7 +168,7 @@ uninitialized_copy(InputIterator first, InputIterator last,
                    const T &x)
 {
     return __uninitialized_fill(first, last, result, value_type(first));
-}
+}*/
 
-}
+}  // end of namespace mio
 #endif // MIO_UNINITIALIZED_H_INCLUDED

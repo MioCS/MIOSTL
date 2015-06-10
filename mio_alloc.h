@@ -7,7 +7,9 @@
 namespace mio
 {
 
-// 第一级配置器
+/**
+ *  第一级配置器
+ */
 template <int inst>
 class __malloc_alloc_template
 {
@@ -111,7 +113,9 @@ void *__malloc_alloc_template<inst>::oom_realloc(void *p, size_t n)
 
 typedef __malloc_alloc_template<0> malloc_alloc;
 
-// 次级配置器
+/**
+ *  次级配置器
+ */
 template <bool threads, int inst>
 class __default_alloc_template
 {
@@ -334,5 +338,39 @@ char *__default_alloc_template<threads, inst>::chunk_alloc(size_t size, int &nob
     // 递归调用，修正nobjs
     return chunk_alloc(size, nobjs);
 }
+
+typedef __default_alloc_template<false, 0> default_alloc;
+
+/**
+ *  配置器包装接口
+ */
+template<class T, class Alloc>
+class simple_alloc
+{
+public:
+    static T *allocate(size_t n)
+    {
+        return n == 0 ? nullptr : static_cast<T *>(Alloc::allocte(n * sizeof(T)));
+    }
+
+    static T *allocate()
+    {
+        return static_cast<T *>(Alloc::allocte(sizeof(T)));
+    }
+
+    static void deallocate(T *p, size_t n)
+    {
+        if(n != 0)
+        {
+            Alloc::deallocate(p, n * sizeof(T));
+        }
+    }
+
+    static void deallocate(T *p)
+    {
+        Alloc::deallocate(p, sizeof(T));
+    }
+};
+
 }  //
 #endif // MIO_ALLOC_H_INCLUDED

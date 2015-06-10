@@ -38,7 +38,9 @@
 		<Unit filename="mio_allocator.h" />
 		<Unit filename="mio_construct.h" />
 		<Unit filename="mio_traits.h" />
+		<Unit filename="mio_type_traits.h" />
 		<Unit filename="mio_uninitialized.h" />
+		<Unit filename="mio_vector.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

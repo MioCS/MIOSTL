@@ -13,7 +13,7 @@ public:
     typedef typename T::value_type value_type;
     typedef typename T::difference_type difference_type;
     typedef typename T::pointer pointer;
-    typedef typename T::reference;
+    typedef typename T::reference reference;
     typedef typename T::iterator_category iterator_category;
 };
 
