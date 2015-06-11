@@ -1,6 +1,8 @@
 #ifndef MIO_TRAITS_H_INCLUDED
 #define MIO_TRAITS_H_INCLUDED
 
+/// 此文件尚未完成，无法使用
+
 #include <cstddef>
 
 namespace mio

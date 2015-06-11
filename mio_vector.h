@@ -3,6 +3,7 @@
 
 #include "mio_alloc.h"
 #include "mio_construct.h"
+#include <bits/stl_uninitialized.h>
 
 namespace mio
 {
@@ -41,6 +42,14 @@ protected:
         start = allocate_and_fill(n, value);
         finish = start + n;
         endOfStorage = finish;
+    }
+
+    iterator allocate_and_fill(size_type n, const T& x)
+    {
+        iterator result = data_allocator::allocate(n);
+        std::uninitialized_fill_n(result, n, x);
+
+        return result;
     }
 
 public:
@@ -168,6 +177,41 @@ public:
         erase(begin(), end());
     }
 };
+
+template <class T, class Alloc>
+void vector<T, Alloc>::insert_aux(iterator position, const T& x)
+{
+    if(finish != endOfStorage)
+    {
+        // 有备用空间
+
+        // 向后移动数据，插入x
+        construct(finish, *(finish - 1));
+        ++finish;
+        // copy [position, finish - 2) to [?, finish - 1)
+        std::copy_backward(position, finish - 2, finish - 1);
+        *position = x;
+    }
+    else
+    {
+        // 无备用空间
+
+        const size_type oldSize = size();
+        const size_type len = oldSize ? 2 * oldSize : 1;
+
+        iterator newStart = data_allocator::allocate(len);
+        iterator newFinish = newStart;
+
+        try
+        {
+            newFinish = uninitialized_copy();
+        }
+        catch(...)
+        {
+
+        }
+    }
+}
 
 }
 #endif // MIO_VECTOR_H_INCLUDED

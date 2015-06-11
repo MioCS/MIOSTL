@@ -1,7 +1,10 @@
 #ifndef MIO_UNINITIALIZED_H_INCLUDED
 #define MIO_UNINITIALIZED_H_INCLUDED
 
+/// 此文件尚未完成，无法使用
+
 #include "mio_construct.h"
+#include "mio_type_traits.h"
 #include <type_traits>  // __true_type
 #include <exception>
 
@@ -55,7 +58,7 @@ __uninitialized_fill_n(ForwardIterator first, Size n, const T&x, T1*)
     return __uninitialized_fill_n_aux(first, n, x, is_POD());
 }
 
-template <class ForwardIterator first, class Size, const T &x>
+template <class ForwardIterator, class Size, const T &x>
 inline ForwardIterator
 uninitialized_fill_n(ForwardIterator first, Size n, const T &x)
 {
