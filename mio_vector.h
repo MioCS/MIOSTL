@@ -2,8 +2,8 @@
 #define MIO_VECTOR_H_INCLUDED
 
 #include "mio_alloc.h"
-#include "mio_construct.h"
 #include <bits/stl_uninitialized.h>
+#include <bits/stl_construct.h>
 
 namespace mio
 {
@@ -128,7 +128,7 @@ public:
     {
         if(finish != endOfStorage)
         {
-            construct(finish, x);
+            std::_Construct(finish, x);
             ++finish;
         }
         else
@@ -140,7 +140,7 @@ public:
     void pop_back()
     {
         --finish;
-        destory(finish);
+        std::_Destory(finish);
     }
 
     iterator erase(iterator position)
@@ -149,7 +149,7 @@ public:
         {
             copy(position + 1, finish, position);
             --finish;
-            destory(finish);
+            std::_Destory(finish);
 
             return position;
         }
@@ -186,7 +186,7 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
         // 有备用空间
 
         // 向后移动数据，插入x
-        construct(finish, *(finish - 1));
+        std::_Construct(finish, *(finish - 1));
         ++finish;
         // copy [position, finish - 2) to [?, finish - 1)
         std::copy_backward(position, finish - 2, finish - 1);
@@ -195,7 +195,7 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
     else
     {
         // 无备用空间
-
+        // 开辟原来2倍的空间
         const size_type oldSize = size();
         const size_type len = oldSize ? 2 * oldSize : 1;
 
@@ -204,12 +204,29 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
 
         try
         {
-            newFinish = uninitialized_copy();
+            // 拷贝插入点前的部分到新空间
+            newFinish = std::uninitialized_copy(start, position, newStart);
+            std::_Construct(newFinish, x);
+            ++newFinish;
+            // 拷贝插入点后的部分到新空间
+            newFinish = std::uninitialized_copy(position, finish, newFinish);
         }
         catch(...)
         {
-
+            // commit or rollback semantics
+            std::_Destory(newStart, newFinish);
+            data_allocator::deallocate(newStart, len);
+            throw;
         }
+
+        // 析构并释放原vector
+        std::_Destory(begin(), end());
+        deallocate();
+
+        // 调整迭代器，指向新vector
+        start = newStart;
+        finish = newFinish;
+        endOfStorage = newStart + len;
     }
 }
 
