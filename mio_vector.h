@@ -22,9 +22,9 @@ public:
     typedef ptrdiff_t difference_type;
 
 protected:
-    typedef simple_alloc<value_type, Alloc> data_allocator;
-    iterator start;           // 表示使用空间的头
-    iterator finish;          // 表示使用空间的尾
+    typedef simple_alloc<value_type, Alloc> data_allocator;  // 空间配置器
+    iterator start;         // 表示使用空间的头
+    iterator finish;        // 表示使用空间的尾
     iterator endOfStorage;  // 表示可用空间的尾
 
     void insert_aux(iterator position, const T& x);
@@ -33,7 +33,7 @@ protected:
     {
         if(start)
         {
-            data_allocator(start, endOfStorage - start);
+            data_allocator::deallocate(start, endOfStorage - start);
         }
     }
 
@@ -140,7 +140,16 @@ public:
     void pop_back()
     {
         --finish;
-        std::_Destory(finish);
+        std::_Destroy(finish);
+    }
+
+    iterator erase(iterator first, iterator last)
+    {
+        iterator i = std::copy(last, finish, first);
+        std::_Destroy(i, finish);
+        finish = i;
+
+        return first;
     }
 
     iterator erase(iterator position)
@@ -149,11 +158,13 @@ public:
         {
             copy(position + 1, finish, position);
             --finish;
-            std::_Destory(finish);
+            std::_Destroy(finish);
 
             return position;
         }
     }
+
+    void insert(iterator position, size_type n, const T &x);
 
     void resize(size_type newSize, const T &x)
     {
@@ -214,13 +225,13 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
         catch(...)
         {
             // commit or rollback semantics
-            std::_Destory(newStart, newFinish);
+            std::_Destroy(newStart, newFinish);
             data_allocator::deallocate(newStart, len);
             throw;
         }
 
         // 析构并释放原vector
-        std::_Destory(begin(), end());
+        std::_Destroy(begin(), end());
         deallocate();
 
         // 调整迭代器，指向新vector
@@ -230,5 +241,77 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
     }
 }
 
+template <class T, class Alloc>
+void vector<T, Alloc>::insert(iterator position, size_type n, const T &x)
+{
+    if(n == 0)
+    {
+        return;
+    }
+
+    // n不等于0才进行以下操作
+    if((endOfStorage - finish) >= n)
+    {
+        T xCopy = x;
+        // 计算插入点之后现有元素的个数
+        const size_type elemsAfter = finish - position;
+        iterator oldFinish = finish;
+
+        if(elemsAfter > n)
+        {
+            // 插入点之后的现有元素个数大于新增元素个数
+            // 这n个元素需要构造
+            std::uninitialized_copy(finish - n, finish, finish);
+            finish += n;
+            // 这n个元素直接拷贝
+            std::copy_backward(position, oldFinish - n, oldFinish);
+            std::fill(position, position + n, xCopy);
+        }
+        else
+        {
+            // 构造oldFinish到n的部分
+            std::uninitialized_fill_n(finish, n - elemsAfter, xCopy);
+            finish += n - elemsAfter;
+            // 移动原有部分
+            std::uninitialized_copy(position, oldFinish, finish);
+            finish += elemsAfter;
+            std::fill(position, oldFinish, xCopy);
+        }
+    }
+    else
+    {
+        // 备用空间不足
+        const size_type oldSize = size();
+        // 决定新长度，旧长度的两倍或旧长度+插入元素个数
+        const size_type len = oldSize + std::max(oldSize, n);
+
+        // 配置新空间
+        iterator new_start = data_allocator::allocate(len);
+        iterator new_finish = new_start;
+        try
+        {
+            // 将旧vector中插入点之前的元素复制到新空间
+            new_finish = std::uninitialized_copy(start, position, new_start);
+            // 将新元素填入新空间
+            std::uninitialized_fill_n(new_finish, n, x);
+            new_finish += n;
+            // 将旧vector中插入点之后的元素复制到新空间
+            new_finish = std::uninitialized_copy(position, finish, new_finish);
+        }
+        catch(...)
+        {
+            std::_Destroy(new_start, new_finish);
+            data_allocator::deallocate(new_start, len);
+            throw;
+        }
+
+        // 新空间配置完成，清除旧空间
+        std::_Destroy(start, finish);
+        deallocate();
+        start = new_start;
+        finish = new_finish;
+        endOfStorage = new_start + len;
+    }
+}
 }
 #endif // MIO_VECTOR_H_INCLUDED

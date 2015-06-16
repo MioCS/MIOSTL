@@ -350,7 +350,7 @@ class simple_alloc
 public:
     static T *allocate(size_t n)
     {
-        return n == 0 ? nullptr : static_cast<T *>(Alloc::allocte(n * sizeof(T)));
+        return n == 0 ? nullptr : static_cast<T *>(Alloc::allocate(n * sizeof(T)));
     }
 
     static T *allocate()
