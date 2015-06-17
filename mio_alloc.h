@@ -191,8 +191,8 @@ public:
             return;
         }
 
-        obj *q = reinterpret_cast<obj *>(p);
-        obj * volatile * myFreeList;
+        obj *q = static_cast<obj *>(p);
+        obj * volatile *myFreeList;
 
         // 找到对应大小的 freelist
         myFreeList = freeList + freelist_index(n);

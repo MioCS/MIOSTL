@@ -22,12 +22,10 @@ public:
     typedef ptrdiff_t difference_type;
 
 protected:
-    typedef simple_alloc<value_type, Alloc> data_allocator;  // ¿Õ¼äÅäÖÃÆ÷
-    iterator start;         // ±íÊ¾Ê¹ÓÃ¿Õ¼äµÄÍ·
-    iterator finish;        // ±íÊ¾Ê¹ÓÃ¿Õ¼äµÄÎ²
-    iterator endOfStorage;  // ±íÊ¾¿ÉÓÃ¿Õ¼äµÄÎ²
-
-    void insert_aux(iterator position, const T& x);
+    typedef simple_alloc<value_type, Alloc> data_allocator;  // ç©ºé—´é…ç½®å™¨
+    iterator start;         // è¡¨ç¤ºä½¿ç”¨ç©ºé—´çš„å¤´
+    iterator finish;        // è¡¨ç¤ºä½¿ç”¨ç©ºé—´çš„å°¾
+    iterator endOfStorage;  // è¡¨ç¤ºå¯ç”¨ç©ºé—´çš„å°¾
 
     void deallocate()
     {
@@ -51,6 +49,8 @@ protected:
 
         return result;
     }
+
+    void inset_aux(iterator position, const T& x);
 
 public:
     iterator begin()
@@ -112,6 +112,8 @@ public:
     ~vector()
     {
         //TODO:
+        std::_Destroy(start, finish);
+        deallocate();
     }
 
     reference front()
@@ -121,7 +123,7 @@ public:
 
     reference back()
     {
-        return *finish;
+        return *(finish - 1);
     }
 
     void push_back(const T &x)
@@ -133,7 +135,7 @@ public:
         }
         else
         {
-            insert_aux(finish, x);
+            inset_aux(finish, x);
         }
     }
 
@@ -159,9 +161,13 @@ public:
             copy(position + 1, finish, position);
             --finish;
             std::_Destroy(finish);
-
-            return position;
         }
+        else
+        {
+            std::_Destroy(position);
+        }
+
+        return position;
     }
 
     void insert(iterator position, size_type n, const T &x);
@@ -190,13 +196,13 @@ public:
 };
 
 template <class T, class Alloc>
-void vector<T, Alloc>::insert_aux(iterator position, const T& x)
+void vector<T, Alloc>::inset_aux(iterator position, const T& x)
 {
     if(finish != endOfStorage)
     {
-        // ÓĞ±¸ÓÃ¿Õ¼ä
+        // æœ‰å¤‡ç”¨ç©ºé—´
 
-        // ÏòºóÒÆ¶¯Êı¾İ£¬²åÈëx
+        // å‘åç§»åŠ¨æ•°æ®ï¼Œæ’å…¥x
         std::_Construct(finish, *(finish - 1));
         ++finish;
         // copy [position, finish - 2) to [?, finish - 1)
@@ -205,8 +211,8 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
     }
     else
     {
-        // ÎŞ±¸ÓÃ¿Õ¼ä
-        // ¿ª±ÙÔ­À´2±¶µÄ¿Õ¼ä
+        // æ— å¤‡ç”¨ç©ºé—´
+        // å¼€è¾ŸåŸæ¥2å€çš„ç©ºé—´
         const size_type oldSize = size();
         const size_type len = oldSize ? 2 * oldSize : 1;
 
@@ -215,11 +221,11 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
 
         try
         {
-            // ¿½±´²åÈëµãÇ°µÄ²¿·Öµ½ĞÂ¿Õ¼ä
+            // æ‹·è´æ’å…¥ç‚¹å‰çš„éƒ¨åˆ†åˆ°æ–°ç©ºé—´
             newFinish = std::uninitialized_copy(start, position, newStart);
             std::_Construct(newFinish, x);
             ++newFinish;
-            // ¿½±´²åÈëµãºóµÄ²¿·Öµ½ĞÂ¿Õ¼ä
+            // æ‹·è´æ’å…¥ç‚¹åçš„éƒ¨åˆ†åˆ°æ–°ç©ºé—´
             newFinish = std::uninitialized_copy(position, finish, newFinish);
         }
         catch(...)
@@ -230,11 +236,11 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x)
             throw;
         }
 
-        // Îö¹¹²¢ÊÍ·ÅÔ­vector
+        // ææ„å¹¶é‡Šæ”¾åŸvector
         std::_Destroy(begin(), end());
         deallocate();
 
-        // µ÷Õûµü´úÆ÷£¬Ö¸ÏòĞÂvector
+        // è°ƒæ•´è¿­ä»£å™¨ï¼ŒæŒ‡å‘æ–°vector
         start = newStart;
         finish = newFinish;
         endOfStorage = newStart + len;
@@ -249,30 +255,30 @@ void vector<T, Alloc>::insert(iterator position, size_type n, const T &x)
         return;
     }
 
-    // n²»µÈÓÚ0²Å½øĞĞÒÔÏÂ²Ù×÷
+    // nä¸ç­‰äº0æ‰è¿›è¡Œä»¥ä¸‹æ“ä½œ
     if((endOfStorage - finish) >= n)
     {
         T xCopy = x;
-        // ¼ÆËã²åÈëµãÖ®ºóÏÖÓĞÔªËØµÄ¸öÊı
+        // è®¡ç®—æ’å…¥ç‚¹ä¹‹åç°æœ‰å…ƒç´ çš„ä¸ªæ•°
         const size_type elemsAfter = finish - position;
         iterator oldFinish = finish;
 
         if(elemsAfter > n)
         {
-            // ²åÈëµãÖ®ºóµÄÏÖÓĞÔªËØ¸öÊı´óÓÚĞÂÔöÔªËØ¸öÊı
-            // Õân¸öÔªËØĞèÒª¹¹Ôì
+            // æ’å…¥ç‚¹ä¹‹åçš„ç°æœ‰å…ƒç´ ä¸ªæ•°å¤§äºæ–°å¢å…ƒç´ ä¸ªæ•°
+            // è¿™nä¸ªå…ƒç´ éœ€è¦æ„é€ 
             std::uninitialized_copy(finish - n, finish, finish);
             finish += n;
-            // Õân¸öÔªËØÖ±½Ó¿½±´
+            // è¿™nä¸ªå…ƒç´ ç›´æ¥æ‹·è´
             std::copy_backward(position, oldFinish - n, oldFinish);
             std::fill(position, position + n, xCopy);
         }
         else
         {
-            // ¹¹ÔìoldFinishµ½nµÄ²¿·Ö
+            // æ„é€ oldFinishåˆ°nçš„éƒ¨åˆ†
             std::uninitialized_fill_n(finish, n - elemsAfter, xCopy);
             finish += n - elemsAfter;
-            // ÒÆ¶¯Ô­ÓĞ²¿·Ö
+            // ç§»åŠ¨åŸæœ‰éƒ¨åˆ†
             std::uninitialized_copy(position, oldFinish, finish);
             finish += elemsAfter;
             std::fill(position, oldFinish, xCopy);
@@ -280,22 +286,22 @@ void vector<T, Alloc>::insert(iterator position, size_type n, const T &x)
     }
     else
     {
-        // ±¸ÓÃ¿Õ¼ä²»×ã
+        // å¤‡ç”¨ç©ºé—´ä¸è¶³
         const size_type oldSize = size();
-        // ¾ö¶¨ĞÂ³¤¶È£¬¾É³¤¶ÈµÄÁ½±¶»ò¾É³¤¶È+²åÈëÔªËØ¸öÊı
+        // å†³å®šæ–°é•¿åº¦ï¼Œæ—§é•¿åº¦çš„ä¸¤å€æˆ–æ—§é•¿åº¦+æ’å…¥å…ƒç´ ä¸ªæ•°
         const size_type len = oldSize + std::max(oldSize, n);
 
-        // ÅäÖÃĞÂ¿Õ¼ä
+        // é…ç½®æ–°ç©ºé—´
         iterator new_start = data_allocator::allocate(len);
         iterator new_finish = new_start;
         try
         {
-            // ½«¾ÉvectorÖĞ²åÈëµãÖ®Ç°µÄÔªËØ¸´ÖÆµ½ĞÂ¿Õ¼ä
+            // å°†æ—§vectorä¸­æ’å…¥ç‚¹ä¹‹å‰çš„å…ƒç´ å¤åˆ¶åˆ°æ–°ç©ºé—´
             new_finish = std::uninitialized_copy(start, position, new_start);
-            // ½«ĞÂÔªËØÌîÈëĞÂ¿Õ¼ä
+            // å°†æ–°å…ƒç´ å¡«å…¥æ–°ç©ºé—´
             std::uninitialized_fill_n(new_finish, n, x);
             new_finish += n;
-            // ½«¾ÉvectorÖĞ²åÈëµãÖ®ºóµÄÔªËØ¸´ÖÆµ½ĞÂ¿Õ¼ä
+            // å°†æ—§vectorä¸­æ’å…¥ç‚¹ä¹‹åçš„å…ƒç´ å¤åˆ¶åˆ°æ–°ç©ºé—´
             new_finish = std::uninitialized_copy(position, finish, new_finish);
         }
         catch(...)
@@ -305,7 +311,7 @@ void vector<T, Alloc>::insert(iterator position, size_type n, const T &x)
             throw;
         }
 
-        // ĞÂ¿Õ¼äÅäÖÃÍê³É£¬Çå³ı¾É¿Õ¼ä
+        // æ–°ç©ºé—´é…ç½®å®Œæˆï¼Œæ¸…é™¤æ—§ç©ºé—´
         std::_Destroy(start, finish);
         deallocate();
         start = new_start;

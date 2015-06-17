@@ -15,13 +15,28 @@ int main()
     v.push_back(3);
     v.push_back(4);
     v.push_back(5);
+
+    for(auto i : v)
+    {
+        cout << i << ends;
+    }
+    cout << endl;
+
     v.insert(v.begin() + 2, 3, 10);
+
+    for(auto i : v)
+    {
+        cout << i << ends;
+    }
+    cout << endl;
+
     v.erase(v.begin(), v.begin() + 2);
 
     for(auto i : v)
     {
-        cout << i << endl;
+        cout << i << ends;
     }
+    cout << endl;
 
     return 0;
 }
