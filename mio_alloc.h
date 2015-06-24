@@ -355,7 +355,7 @@ public:
 
     static T *allocate()
     {
-        return static_cast<T *>(Alloc::allocte(sizeof(T)));
+        return static_cast<T *>(Alloc::allocate(sizeof(T)));
     }
 
     static void deallocate(T *p, size_t n)
