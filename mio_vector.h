@@ -172,6 +172,8 @@ public:
 
     void insert(iterator position, size_type n, const T &x);
 
+    void insert(iterator position, iterator begin, iterator end);
+
     void resize(size_type newSize, const T &x)
     {
         if(newSize < size())
