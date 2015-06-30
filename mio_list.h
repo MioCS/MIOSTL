@@ -158,6 +158,9 @@ protected:
         node->prev = node;
     }
 
+    // 将[first,last)内的所有原始移动到position之前
+    void transfer(iterator position, iterator first, iterator last);
+
 public:
     iterator begin()
     {
@@ -274,7 +277,56 @@ public:
 
     // 移除数值相同的连续元素
     void unique();
+
+    // 将x接合于position之前的位置，x必须不同于*this
+    void splice(iterator position, list &x)
+    {
+        if(!x.empty())
+        {
+            transfer(position, x.begin(), x.end());
+        }
+    }
+
+    // 将i所指的元素接合于position之前
+    void splice(iterator position, list&, iterator i)
+    {
+        iterator j = i;
+        ++j;
+
+        if(position == i || position == j)
+        {
+            return;
+        }
+
+        transfer(position, i, j);
+    }
+
+    // 将[first, last)内所有元素接合到position所指位置之前
+    void splice(iterator position, iterator first, iterator last)
+    {
+        if(first != last)
+        {
+            transfer(position, first, last);
+        }
+    }
+
+    //void merge(list)
 };
+
+template <class  T, class Alloc>
+void list<T, Alloc>::transfer(iterator position, iterator first, iterator last)
+{
+    if(position != last)
+    {
+        last.node->prev->next = position.node;
+        first.node->prev->next = last.node;
+        position.node->prev->next = first.node;
+        link_type temp = position.node->prev;
+        position.node->prev = last.node->prev;
+        last.node->prev = first.node->prev;
+        first.node->prev = temp;
+    }
+}
 
 template <class T, class Alloc>
 void list<T, Alloc>::clear()
