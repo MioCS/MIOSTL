@@ -7,6 +7,17 @@
 
 using namespace std;
 
+class P
+{
+private:
+    int x;
+public:
+    void func(P &p)
+    {
+        x = p.x;
+    }
+};
+
 int main()
 {
     mio::list<int> l1;
@@ -23,10 +34,13 @@ int main()
     l1.show();
     l2.show();
 
-    l1.splice(l1.begin(), l2);
+    l1.swap(l2);
 
     l1.show();
     l2.show();
+
+    P p, q;
+    p.func(q);
 
     return 0;
 }

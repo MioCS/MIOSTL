@@ -85,7 +85,7 @@ public:
 
     self &operator--()
     {
-        node = node->pre;
+        node = node->prev;
 
         return *this;
     }
@@ -257,6 +257,7 @@ public:
         erase(--end());
     }
 
+    // 依次打印链表值（仅测试使用）
     void show()
     {
         iterator cur = begin();
@@ -267,6 +268,11 @@ public:
             ++cur;
         }
         std::cout << std::endl;
+    }
+
+    void swap(list &x)
+    {
+        std::swap(this->node, x.node);
     }
 
     // 清除所有节点
@@ -310,7 +316,14 @@ public:
         }
     }
 
-    //void merge(list)
+    // 合并2个排序好的链表,x到*this
+    void merge(list<T, Alloc>& x);
+
+    // 逆置链表
+    void reverse();
+
+    // 使用QuickSort对元素进行排序
+    void sort();
 };
 
 template <class  T, class Alloc>
@@ -391,6 +404,60 @@ void list<T, Alloc>::unique()
             ++first;
         }
     }
+}
+
+template <class T, class Alloc>
+void list<T, Alloc>::merge(list<T, Alloc>& x)
+{
+    iterator first1 = begin();
+    iterator last1 = end();
+    iterator first2 = x.begin();
+    iterator last2 = x.end();
+
+    // 将x的元素插入到*this中
+    while(first1 != last1 && first2 != last2)
+    {
+        if(*first1 > *first2)
+        {
+            iterator next = first2;
+            transfer(first1, first2, ++next);
+            first2 = next;
+        }
+
+        ++first1;
+    }
+
+    // 将剩余x元素全部置于*this尾部
+    if(first2 != last2)
+    {
+        transfer(last1, first2, last2);
+    }
+}
+
+template <class T, class Alloc>
+void list<T, Alloc>::reverse()
+{
+    // 如果链表只含有0个或1个元素则无需处理
+    if(node->next == node || node->next->next == node)
+    {
+        return;
+    }
+
+    // 从前往后依次将元素插入到node之后，得到逆序链表
+    iterator first = begin();
+    ++first;
+
+    while(first != end())
+    {
+        iterator old = first;
+        ++first;
+        transfer(begin(), old, first);
+    }
+}
+
+template <class T, class Alloc>
+void list<T, Alloc>::sort()
+{
 }
 
 }  // end of namespace mio
