@@ -322,7 +322,7 @@ public:
     // 逆置链表
     void reverse();
 
-    // 使用QuickSort对元素进行排序
+    // 使用非递归的二路归并对元素进行排序
     void sort();
 };
 
@@ -458,6 +458,46 @@ void list<T, Alloc>::reverse()
 template <class T, class Alloc>
 void list<T, Alloc>::sort()
 {
+    // 如果链表只含有0个或1个元素则无需处理
+    if(node->next == node || node->next->next == node)
+    {
+        return;
+    }
+
+    list<T, Alloc> carry;        // 保存归并好的数，处理归并规模的进位
+    list<T, Alloc> counter[64];  // counter[i]最多保存排序好的2^i个数
+    int fill = 0;                // 表示当前归并序列最多处理2^fill个数
+
+    // 采用非递归的二路归并
+    while(!empty())
+    {
+        // 取出一个元素放入carry
+        splice(carry.begin(), *this, begin());
+        int i = 0;
+
+        // 自底向上完成归并过程
+        while(i < fill && !counter[i].empty())
+        {
+            counter[i].merge(carry);
+            carry.swap(counter[i++]);
+        }
+
+        carry.swap(counter[i]);
+
+        // 完成2^fill规模的归并后，向2^(fill + 1)扩充
+        if(i == fill)
+        {
+            ++fill;
+        }
+    }
+
+    // 将零碎部分进行归并
+    for(int i = 1; i < fill; ++i)
+    {
+       counter[i].merge(counter[i - 1]);
+    }
+
+    swap(counter[fill - 1]);
 }
 
 }  // end of namespace mio
