@@ -4,6 +4,7 @@
 #include <new>
 #include <algorithm>
 #include "mio_list.h"
+#include "mio_deque.h"
 
 using namespace std;
 
