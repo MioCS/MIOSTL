@@ -3,6 +3,7 @@
 #include <memory>
 #include <new>
 #include <algorithm>
+#include "mio_vector.h"
 #include "mio_list.h"
 #include "mio_deque.h"
 

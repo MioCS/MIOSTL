@@ -247,17 +247,107 @@ public:
     }
 
 protected:
-    void creat_map_and_nodes(size_type num_elements)
+    size_type buffer_size()
     {
-        // 需要节点数 = (元素个数/缓冲区大小) + 1
-        // 刚好整除时多一个节点
-        size_type num_nodes = num_elements / buffer_size() + 1;
-
-        //
+        return iterator::buffer_size();
     }
+
+    pointer allocate_node()
+    {
+        return data_allocator::allocate(buffer_size() *
+                                        sizeof(value_type));
+    }
+
+    pointer deallocate_node(pointer p)
+    {
+        return data_allocator::deallocate(p, buffer_size() *
+                                             sizeof(value_type));
+    }
+
+    // 创建含有num_elements个节点的map
+    void creat_map_and_nodes(size_type num_elements);
+
+    // 构建deque并赋初值
+    void fill_initialize(size_type n, const value_type &value);
 };
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::creat_map_and_nodes(size_type num_elements)
+{
+    // 需要节点数 = (元素个数/缓冲区大小) + 1
+    // 刚好整除时多一个节点
+    size_type num_nodes = num_elements / buffer_size() + 1;
+
+    // 一个map管理多个节点。最少8个,最多为所需节点数+2(前后各预留一个)
+    map_size = std::max(static_cast<size_type>(8), num_nodes + 2);
+    // 配置具有map_size个节点的map
+    map = map_allocator::allocate(map_size);
+
+    // 令nstart和nfinish指向map的中间节点，保证头尾的可扩充空间一样大
+    map_pointer nstart = map + (map_size - num_nodes) / 2;
+    map_pointer nfinish = nstart + num_nodes - 1;
+
+    // 为每个要使用的节点配置缓冲区
+    map_pointer cur;
+
+    try
+    {
+        for(cur = nstart; cur <= nstart; ++cur)
+        {
+            *cur = allocate_node();
+        }
+    }
+    catch(...)
+    {
+        for(cur = nstart; cur <= nstart; ++cur)
+        {
+            if(cur != nullptr)
+            {
+                deallocate_node(cur);
+            }
+        }
+
+        throw;
+    }
+
+    // 为内部迭代器start和end设定正确内容
+    start.set_node(nstart);
+    finish.set_node(nfinish);
+    start.cur = start.first;
+    // 对于刚好整除多分配一个节点的情况，令cur指向多分配的节点的起始处
+    finish.cur = finish.first + num_elements % buffer_size();
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::fill_initialize(size_type n, const value_type &value)
+{
+    creat_map_and_nodes(n);
+    map_pointer cur;
+
+    try
+    {
+        // 为每个节点的缓冲区设置初值
+        for(cur = start.node; cur < finish.mode; ++cur)
+        {
+            std::uninitialized_copy(*cur, *cur + buffer_size(), value);
+        }
+        // 尾端可能有备用空间，不必设定初值(由于finish节点可能指向多分配的节点)
+        std::uninitialized_copy(finish.first, finish.cur, value);
+    }
+    catch(...)
+    {
+        // 为每个节点的缓冲区设置初值
+        for(cur = start.node; cur < finish.mode; ++cur)
+        {
+            std::_Destroy(*cur, *cur + buffer_size());
+        }
+        // 尾端可能有备用空间，不必设定初值(由于finish节点可能指向多分配的节点)
+        std::_Destroy(finish.first, finish.cur);
+
+        throw;
+    }
+}
+
 }  // end of namespace mio
-
-
 
 #endif // MIO_DEQUE_H_INCLUDED

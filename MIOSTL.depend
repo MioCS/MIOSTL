@@ -23,12 +23,13 @@
 1426518252 source:d:\github\miostl\miostl\mio_vector.cpp
 	"mio_vector.h"
 
-1436354334 source:d:\github\miostl\main.cpp
+1436444930 source:d:\github\miostl\main.cpp
 	<iostream>
 	<vector>
 	<memory>
 	<new>
 	<algorithm>
+	"mio_vector.h"
 	"mio_list.h"
 	"mio_deque.h"
 
@@ -46,7 +47,7 @@
 1433932911 d:\github\miostl\mio_traits.h
 	<cstddef>
 
-1435142021 d:\github\miostl\mio_vector.h
+1436444914 d:\github\miostl\mio_vector.h
 	"mio_alloc.h"
 	<bits/stl_uninitialized.h>
 	<bits/stl_construct.h>
@@ -59,7 +60,7 @@
 	<iterator>
 	<bits/stl_construct.h>
 
-1436356870 d:\github\miostl\mio_deque.h
+1436446632 d:\github\miostl\mio_deque.h
 	"mio_alloc.h"
 	<iterator>
 	<bits/stl_construct.h>

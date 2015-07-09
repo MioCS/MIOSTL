@@ -50,7 +50,8 @@ protected:
         return result;
     }
 
-    void inset_aux(iterator position, const T& x);
+    // 在position处插入x
+    void insert_aux(iterator position, const T& x);
 
 public:
     iterator begin()
@@ -135,7 +136,7 @@ public:
         }
         else
         {
-            inset_aux(finish, x);
+            insert_aux(finish, x);
         }
     }
 
@@ -198,7 +199,7 @@ public:
 };
 
 template <class T, class Alloc>
-void vector<T, Alloc>::inset_aux(iterator position, const T& x)
+void vector<T, Alloc>::insert_aux(iterator position, const T& x)
 {
     if(finish != endOfStorage)
     {
@@ -296,6 +297,7 @@ void vector<T, Alloc>::insert(iterator position, size_type n, const T &x)
         // 配置新空间
         iterator new_start = data_allocator::allocate(len);
         iterator new_finish = new_start;
+
         try
         {
             // 将旧vector中插入点之前的元素复制到新空间
