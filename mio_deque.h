@@ -8,6 +8,7 @@
 namespace mio
 {
 
+// 计算缓冲区大小(元素个数)
 inline size_t __deque_buf_size(size_t n, size_t sz)
 {
     return n ? n : (sz < 512 ? static_cast<size_t>(512 / sz) : size_t(1));
@@ -258,10 +259,10 @@ protected:
                                         sizeof(value_type));
     }
 
-    pointer deallocate_node(pointer p)
+    void deallocate_node(pointer p)
     {
-        return data_allocator::deallocate(p, buffer_size() *
-                                             sizeof(value_type));
+        data_allocator::deallocate(p, buffer_size() *
+                                   sizeof(value_type));
     }
 
     // 创建含有num_elements个节点的map
@@ -269,6 +270,14 @@ protected:
 
     // 构建deque并赋初值
     void fill_initialize(size_type n, const value_type &value);
+
+public:
+    // constructor
+    deque(int n, const value_type &value)
+    :start(), finish(), map(nullptr), map_size(0)
+    {
+        fill_initialize(n, value);
+    }
 };
 
 template <class T, class Alloc, size_t BufSize>
@@ -292,18 +301,18 @@ void deque<T, Alloc, BufSize>::creat_map_and_nodes(size_type num_elements)
 
     try
     {
-        for(cur = nstart; cur <= nstart; ++cur)
+        for(cur = nstart; cur <= nfinish; ++cur)
         {
             *cur = allocate_node();
         }
     }
     catch(...)
     {
-        for(cur = nstart; cur <= nstart; ++cur)
+        for(cur = nstart; cur <= nfinish; ++cur)
         {
             if(cur != nullptr)
             {
-                deallocate_node(cur);
+                deallocate_node(*cur);
             }
         }
 
@@ -322,26 +331,27 @@ template <class T, class Alloc, size_t BufSize>
 void deque<T, Alloc, BufSize>::fill_initialize(size_type n, const value_type &value)
 {
     creat_map_and_nodes(n);
+
     map_pointer cur;
 
     try
     {
         // 为每个节点的缓冲区设置初值
-        for(cur = start.node; cur < finish.mode; ++cur)
+        for(cur = start.node; cur < finish.node; ++cur)
         {
-            std::uninitialized_copy(*cur, *cur + buffer_size(), value);
+            std::uninitialized_fill(*cur, *cur + buffer_size(), value);
         }
         // 尾端可能有备用空间，不必设定初值(由于finish节点可能指向多分配的节点)
-        std::uninitialized_copy(finish.first, finish.cur, value);
+        std::uninitialized_fill(finish.first, finish.cur, value);
     }
     catch(...)
     {
         // 为每个节点的缓冲区设置初值
-        for(cur = start.node; cur < finish.mode; ++cur)
+        for(cur = start.node; cur < finish.node; ++cur)
         {
             std::_Destroy(*cur, *cur + buffer_size());
         }
-        // 尾端可能有备用空间，不必设定初值(由于finish节点可能指向多分配的节点)
+        // 尾端可能有备用空间
         std::_Destroy(finish.first, finish.cur);
 
         throw;

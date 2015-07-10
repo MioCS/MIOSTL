@@ -85,8 +85,8 @@ public:
     }
 
     // constructors
-    vector():
-        start(nullptr), finish(nullptr), endOfStorage(nullptr)
+    vector()
+    :start(nullptr), finish(nullptr), endOfStorage(nullptr)
     {
     }
 

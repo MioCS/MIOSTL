@@ -22,18 +22,15 @@ public:
 
 int main()
 {
-    mio::list<int> l1;
-    mio::list<int> l2;
+    mio::deque<double> dq(10000, 1.0);
 
-    l1.push_back(3);
-    l1.push_back(1);
-    l1.push_back(2);
-    l1.push_back(5);
-    l1.push_back(4);
-    l1.show();
+    cout << dq.front() << endl;
 
-    l1.sort();
-    l1.show();
+    int x = 3;
+    int *y = &x;
+
+    cout << y << endl;
+    cout << (y + 1) << endl;
 
     return 0;
 }
