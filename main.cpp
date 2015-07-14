@@ -22,15 +22,10 @@ public:
 
 int main()
 {
-    mio::deque<double> dq(10000, 1.0);
+    mio::deque<int> dq(63, 1);
 
+    dq.push_front(3);
     cout << dq.front() << endl;
-
-    int x = 3;
-    int *y = &x;
-
-    cout << y << endl;
-    cout << (y + 1) << endl;
 
     return 0;
 }

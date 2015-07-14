@@ -147,7 +147,7 @@ private:
     // 请求分配多个大小为n的内存块，多余块会加入到对应freelist项中
     static void *refill(size_t n);
 
-    //
+    // 从内存池中调度空间给freelist
     static char *chunk_alloc(size_t size, int &nobjs);
 
     static char *startFree;

@@ -271,12 +271,60 @@ protected:
     // 构建deque并赋初值
     void fill_initialize(size_type n, const value_type &value);
 
+private:
+    // 当map尾部空间不足时调用
+    void push_back_aux(size_type nodes_to_add = 1)
+    {
+        if(nodes_to_add + 1 > map_size - (finish.node - map))
+        {
+            // map尾部的备用节点空间不足，需要更换map
+            // 当尾部满时，map_size - (finish.node - map)值应当为1
+        }
+    }
+
+    // 当最后一个缓冲区只剩一个元素备用空间时调用
+    void push_back_aux(const value_type &t);
+
+    // 当第一个缓冲区没有备用空间时调用
+    void push_front_aux(const value_type &t);
+
 public:
     // constructor
     deque(int n, const value_type &value)
     :start(), finish(), map(nullptr), map_size(0)
     {
         fill_initialize(n, value);
+    }
+
+    void push_back(const value_type &t)
+    {
+        if(finish.cur != finish.last - 1)
+        {
+            // 如果缓冲区有两个（含）以上元素备用空间，
+            // 直接在备用空间上构造元素
+            std::_Construct(finish.cur, t);
+            ++finish.cur;
+        }
+        else
+        {
+            // 如果缓冲区只剩最后一个元素备用空间
+            push_back_aux(t);
+        }
+    }
+
+    void push_front(const value_type &t)
+    {
+        if(start.cur != start.first)
+        {
+            // 第一缓冲区有备用空间
+            std::_Construct(start.cur - 1, t);
+            --start.cur;
+        }
+        else
+        {
+            // 第一缓冲区已无备用空间
+            push_front_aux(t);
+        }
     }
 };
 
@@ -296,7 +344,7 @@ void deque<T, Alloc, BufSize>::creat_map_and_nodes(size_type num_elements)
     map_pointer nstart = map + (map_size - num_nodes) / 2;
     map_pointer nfinish = nstart + num_nodes - 1;
 
-    // 为每个要使用的节点配置缓冲区
+    // 为每个要使用的节点配置缓冲区template <class T, class Alloc, size_t BufSize>
     map_pointer cur;
 
     try
@@ -354,6 +402,50 @@ void deque<T, Alloc, BufSize>::fill_initialize(size_type n, const value_type &va
         // 尾端可能有备用空间
         std::_Destroy(finish.first, finish.cur);
 
+        throw;
+    }
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::push_back_aux(const value_type &t)
+{
+    value_type tCopy = t;
+
+    //reserve_map_at_back();                 // map空间不足，需要扩充
+    *(finish.node + 1) = allocate_node();  // 配置一个新的缓冲区
+
+    try
+    {
+        std::_Construct(finish.cur, tCopy);  // 构造元素
+        finish.set_node(finish.node + 1);    // 令finish指向新节点
+        finish.cur = finish.first;           // 改变finish的状态
+    }
+    catch(...)
+    {
+        deallocate_node(*(finish.node + 1));
+        throw;
+    }
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::push_front_aux(const value_type &t)
+{
+    value_type tCopy = t;
+
+    //reserve_map_at_front();                // map空间不足，需要扩充
+    *(finish.node - 1) = allocate_node();  // 配置一个新的缓冲区
+
+    try
+    {
+        start.set_node(finish.node - 1);     // 令start指向新节点
+        start.cur = start.last - 1;          // 改变start的状态
+        std::_Construct(start.cur, tCopy);  // 构造元素
+    }
+    catch(...)
+    {
+        start.set_node(start.node + 1);
+        start.cur = start.first;
+        deallocate_node(*(start.node + 1));
         throw;
     }
 }
