@@ -204,7 +204,7 @@ protected:
     iterator start;      // 指向第一个节点
     iterator finish;     // 指向最后一个节点
     map_pointer map;     // 指向map的指针
-    size_type map_size;  // map内部指针数量
+    size_type mapSize;  // map内部指针数量
 
 public:
     iterator begin()
@@ -273,14 +273,28 @@ protected:
 
 private:
     // 当map尾部空间不足时调用
-    void push_back_aux(size_type nodes_to_add = 1)
+    void reserve_map_at_back(size_type nodesToAdd = 1)
     {
-        if(nodes_to_add + 1 > map_size - (finish.node - map))
+        if(nodesToAdd + 1 > mapSize - (finish.node - map))
         {
             // map尾部的备用节点空间不足，需要更换map
             // 当尾部满时，map_size - (finish.node - map)值应当为1
+            reallocate_map(nodesToAdd, false);
         }
     }
+
+    // 当map头部空间不足时调用
+    void reserve_map_at_front(size_type nodesToAdd = 1)
+    {
+        if(nodesToAdd > start.node - map)
+        {
+            // map头部的备用节点空间不足，需要更换map
+            reallocate_map(nodesToAdd, true);
+        }
+    }
+
+    // 当map空间不足时，配置新的map
+    void reallocate_map(size_type nodesToAdd, bool addAtFront);
 
     // 当最后一个缓冲区只剩一个元素备用空间时调用
     void push_back_aux(const value_type &t);
@@ -288,10 +302,16 @@ private:
     // 当第一个缓冲区没有备用空间时调用
     void push_front_aux(const value_type &t);
 
+    // 当最后一个缓冲区为空时调用
+    void pop_back_aux();
+
+    // 当第一个缓冲区只剩一个元素时调用
+    void pop_front_aux();
+
 public:
     // constructor
     deque(int n, const value_type &value)
-    :start(), finish(), map(nullptr), map_size(0)
+    :start(), finish(), map(nullptr), mapSize(0)
     {
         fill_initialize(n, value);
     }
@@ -323,7 +343,35 @@ public:
         else
         {
             // 第一缓冲区已无备用空间
-            push_front_aux(t);
+            push_front_aux();
+        }
+    }
+
+    void pop_back()
+    {
+        if(finish.cur != finish.first)
+        {
+            // 最后一个缓冲区中含有一个或多个元素
+            --finish.cur;
+            std::_Destroy(finish.cur);
+        }
+        else
+        {
+            pop_back_aux();
+        }
+    }
+
+    void pop_front()
+    {
+        if(start.cur != start.last - 1)
+        {
+            // 第一个缓冲区中含有一个以上元素
+            std::_Destroy(start.cur);
+            ++start.cur;
+        }
+        else
+        {
+            pop_front_aux();
         }
     }
 };
@@ -336,12 +384,12 @@ void deque<T, Alloc, BufSize>::creat_map_and_nodes(size_type num_elements)
     size_type num_nodes = num_elements / buffer_size() + 1;
 
     // 一个map管理多个节点。最少8个,最多为所需节点数+2(前后各预留一个)
-    map_size = std::max(static_cast<size_type>(8), num_nodes + 2);
+    mapSize = std::max(static_cast<size_type>(8), num_nodes + 2);
     // 配置具有map_size个节点的map
-    map = map_allocator::allocate(map_size);
+    map = map_allocator::allocate(mapSize);
 
     // 令nstart和nfinish指向map的中间节点，保证头尾的可扩充空间一样大
-    map_pointer nstart = map + (map_size - num_nodes) / 2;
+    map_pointer nstart = map + (mapSize - num_nodes) / 2;
     map_pointer nfinish = nstart + num_nodes - 1;
 
     // 为每个要使用的节点配置缓冲区template <class T, class Alloc, size_t BufSize>
@@ -407,11 +455,56 @@ void deque<T, Alloc, BufSize>::fill_initialize(size_type n, const value_type &va
 }
 
 template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::reallocate_map(size_type nodesToAdd, bool addAtFront)
+{
+    size_type oldNumNodes = finish.node - start.node + 1;
+    size_type newNumNodes = oldNumNodes + nodesToAdd;
+    map_pointer newStart;
+
+    if(mapSize > 2 * newNumNodes)
+    {
+        newStart = map + (mapSize - newNumNodes) / 2 +
+                   (addAtFront ? nodesToAdd : 0);
+
+        if(newStart < start.node)
+        {
+            // 复制[x, y)到[z, ?)
+            std::copy(start.node, finish.node + 1, newStart);
+        }
+        else
+        {
+            // 复制[x, y)到[?, z);
+            std::copy_backward(start.node, finish.node + 1, newStart + oldNumNodes);
+        }
+    }
+    else
+    {
+        // 空间不足，配置新map
+        size_type newMapSize = mapSize + std::max(mapSize, nodesToAdd) + 2;
+        map_pointer newMap = map_allocator::allocate(newMapSize);
+        newStart = newMap + (newMapSize - newNumNodes) / 2 +
+                   (addAtFront ? nodesToAdd : 0);
+
+        // 将原来map中的内容复制到新的map中
+        std::copy(start.node, finish.node + 1, newStart);
+        // 释放原来的map;
+        map_allocator::deallocate(map, mapSize);
+        // 设定新的map的起始位置和大小
+        map = newMap;
+        mapSize = newMapSize;
+    }
+
+    // 重新设置start和finish
+    start.set_node(newStart);
+    finish.set_node(newStart + oldNumNodes - 1);
+}
+
+template <class T, class Alloc, size_t BufSize>
 void deque<T, Alloc, BufSize>::push_back_aux(const value_type &t)
 {
     value_type tCopy = t;
 
-    //reserve_map_at_back();                 // map空间不足，需要扩充
+    reserve_map_at_back();                 // map空间不足，需要扩充
     *(finish.node + 1) = allocate_node();  // 配置一个新的缓冲区
 
     try
@@ -432,12 +525,12 @@ void deque<T, Alloc, BufSize>::push_front_aux(const value_type &t)
 {
     value_type tCopy = t;
 
-    //reserve_map_at_front();                // map空间不足，需要扩充
-    *(finish.node - 1) = allocate_node();  // 配置一个新的缓冲区
+    reserve_map_at_front();                // map空间不足，需要扩充
+    *(start.node - 1) = allocate_node();  // 配置一个新的缓冲区
 
     try
     {
-        start.set_node(finish.node - 1);     // 令start指向新节点
+        start.set_node(start.node - 1);     // 令start指向新节点
         start.cur = start.last - 1;          // 改变start的状态
         std::_Construct(start.cur, tCopy);  // 构造元素
     }
@@ -448,6 +541,24 @@ void deque<T, Alloc, BufSize>::push_front_aux(const value_type &t)
         deallocate_node(*(start.node + 1));
         throw;
     }
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::pop_back_aux()
+{
+    deallocate_node(finish.first);     // 释放最后一个缓冲区
+    finish.set_node(finish.node - 1);  // 调整finish节点，指向上一个缓冲区
+    finish.cur = finish.last - 1;      // 指向上一个缓冲区的最后一个元素
+    std::_Destroy(finish.cur);         // 析构该元素
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::pop_front_aux()
+{
+    std::_Destroy(start.cur);      // 析构第一个缓冲区的最后一个元素
+    deallocate_node(start.first);  // 释放第一个缓冲区
+    start.set_node(start + 1);     // 调整start节点，指向下一个缓冲区
+    start.cur = start.first;       // 指向下一个缓冲区的第一个节点
 }
 
 }  // end of namespace mio

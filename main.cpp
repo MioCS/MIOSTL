@@ -22,10 +22,11 @@ public:
 
 int main()
 {
-    mio::deque<int> dq(63, 1);
-
-    dq.push_front(3);
-    cout << dq.front() << endl;
+    mio::deque<int> dq(10, 1);
+    dq.push_back(2);
+    cout << dq.back() << endl;
+    dq.pop_back();
+    cout << dq.back() << endl;
 
     return 0;
 }
