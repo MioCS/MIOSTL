@@ -42,7 +42,7 @@ inline void _construct(T1 *p, const T2& value)
 template <class T>
 inline void _destory(T *ptr)
 {
-    ptr->~T;
+    ptr->~T();
 }
 
 template <class T>

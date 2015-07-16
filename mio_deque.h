@@ -343,7 +343,7 @@ public:
         else
         {
             // 第一缓冲区已无备用空间
-            push_front_aux();
+            push_front_aux(t);
         }
     }
 
@@ -374,6 +374,33 @@ public:
             pop_front_aux();
         }
     }
+
+    // 清空deque内容,但保留first缓冲区内存
+    void clear();
+
+    iterator erase(iterator pos)
+    {
+        iterator next = pos;
+        ++next;
+        difference_type index = pos - start;  // 清除点之前的元素个数
+
+        if(index < (size() >> 1))
+        {
+            // 清除点之前的元素较少，移动之前的元素
+            std::copy_backward(start, pos, next);
+            pop_front();  // 删除冗余的第一个元素
+        }
+        else
+        {
+            // 清除点之后的元素较少，移动之前的元素
+            std::copy(next, finish, pos);
+            pop_back();  // 删除冗余的最后一个元素
+        }
+
+        return start + index;
+    }
+
+    iterator erase(iterator first, iterator last);
 };
 
 template <class T, class Alloc, size_t BufSize>
@@ -555,10 +582,91 @@ void deque<T, Alloc, BufSize>::pop_back_aux()
 template <class T, class Alloc, size_t BufSize>
 void deque<T, Alloc, BufSize>::pop_front_aux()
 {
-    std::_Destroy(start.cur);      // 析构第一个缓冲区的最后一个元素
-    deallocate_node(start.first);  // 释放第一个缓冲区
-    start.set_node(start + 1);     // 调整start节点，指向下一个缓冲区
-    start.cur = start.first;       // 指向下一个缓冲区的第一个节点
+    std::_Destroy(start.cur);        // 析构第一个缓冲区的最后一个元素
+    deallocate_node(start.first);    // 释放第一个缓冲区
+    start.set_node(start.node + 1);  // 调整start节点，指向下一个缓冲区
+    start.cur = start.first;         // 指向下一个缓冲区的第一个节点
+}
+
+template <class T, class Alloc, size_t BufSize>
+void deque<T, Alloc, BufSize>::clear()
+{
+    // 根据deque的策略最终需要保留一个缓冲区
+    // 头尾之间的缓冲区都是饱满的，直接删除
+    for(map_pointer node = start.node + 1; node < finish.node; ++node)
+    {
+        // 析构缓冲区内的所有元素
+        std::_Destroy(*node, *node + buffer_size());
+        // 释放缓冲区内存
+        data_allocator::deallocate(*node, buffer_size());
+    }
+
+    if(start.node != finish.node)
+    {
+        // 头尾都存在
+        std::_Destroy(start.cur, start.last);
+        std::_Destroy(finish.first, finish.cur);
+        // 释放尾缓冲区，保留头缓冲区
+        data_allocator::deallocate(finish.first, buffer_size());
+    }
+    else
+    {
+        // 只有一个缓冲区，只析构不释放空间
+        std::_Destroy(start.cur, start.last);
+    }
+
+    finish = start;
+}
+
+template <class T, class Alloc, size_t BufSize>
+typename deque<T, Alloc, BufSize>::iterator
+deque<T, Alloc, BufSize>::erase(iterator first, iterator last)
+{
+    // 如果清除的是整个区间，直接调用clear()
+    if(first == start && last == finish)
+    {
+        clear();
+
+        return finish;
+    }
+    else
+    {
+        difference_type n = last - first;            // 清除区间的长度
+        difference_type elemsBefore = first - start;  // 清除区间前方的元素个数
+
+        if(elemsBefore < (size() - n) >> 1)
+        {
+            // 如果前方的元素比较少,向后移动前方元素
+            copy_backward(start, first, last);
+            iterator newStart = start + n;
+            std::_Destroy(start, newStart);  // 析构冗余元素
+
+            // 释放冗余缓冲区
+            for(map_pointer cur = start.node; cur < newStart.node; ++cur)
+            {
+                data_allocator::deallocate(*cur, buffer_size());
+            }
+
+            start = newStart;
+        }
+        else
+        {
+            // 如果后方的元素比较少,向前移动后方元素
+            std::copy(last, finish, first);
+            iterator newFinish = finish - n;
+            std::_Destroy(newFinish, finish);  // 析构冗余元素
+
+            // 释放冗余缓冲区
+            for(map_pointer cur = newFinish.node + 1; cur <= finish.node; ++cur)
+            {
+                data_allocator::deallocate(*cur, buffer_size());
+            }
+
+            finish = newFinish;
+        }
+
+        return start + elemsBefore;
+    }
 }
 
 }  // end of namespace mio
