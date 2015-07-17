@@ -12,26 +12,21 @@ using namespace std;
 
 class P
 {
-private:
-    int x;
 public:
-    void func(P &p)
+    void operator()(int x)
     {
-        x = p.x;
+        cout << x << endl;
     }
 };
 
 int main()
 {
     mio::deque<double> dq(10, 1);
-    dq.push_front(2);
-    dq.push_front(2);
-    dq.clear();
-    dq.push_back(1);
-    dq.push_back(2);
-    dq.erase(dq.begin());
-    cout << dq.back() << endl;
-    cout << dq.front() << endl;
+    dq.insert(dq.end() - 3, 2);
+    for(auto i : dq)
+    {
+        cout << i << endl;
+    }
 
     return 0;
 }

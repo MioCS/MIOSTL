@@ -119,19 +119,17 @@ public:
         if(offset >= 0 && offset < static_cast<difference_type>(buffer_size()))
         {
             // 目标位置在同一缓冲区中
-
             cur += n;
         }
         else
         {
             // 目标位置在不同缓冲区中
-
-            difference_type node_offset = offset > 0 ?
+            difference_type nodeOffset = offset > 0 ?
                             offset / static_cast<difference_type>(buffer_size()) :
-                            (offset + 1) / static_cast<difference_type>(buffer_size()) - 1;
+                            -static_cast<difference_type>((-offset - 1) / buffer_size()) - 1;
 
-            set_node(node + offset);
-            cur = first + (offset - node_offset * static_cast<difference_type>(buffer_size()));
+            set_node(node + nodeOffset);
+            cur = first + (offset - nodeOffset * static_cast<difference_type>(buffer_size()));
         }
 
         return *this;
@@ -308,6 +306,9 @@ private:
     // 当第一个缓冲区只剩一个元素时调用
     void pop_front_aux();
 
+    // 当插入位置位于deque中间时调用
+    iterator insert_aux(iterator pos, const value_type &x);
+
 public:
     // constructor
     deque(int n, const value_type &value)
@@ -401,6 +402,29 @@ public:
     }
 
     iterator erase(iterator first, iterator last);
+
+    iterator insert(iterator position, const value_type &x)
+    {
+        if(position.cur == start.cur)
+        {
+            // 如果插入位置在最前端，直接调用push_front
+            push_front(x);
+
+            return start;
+        }
+        else if(position.cur == finish.cur)
+        {
+            // 如果插入位置在尾端，直接调用push_back
+            push_back(x);
+            iterator temp = finish;
+
+            return --temp;
+        }
+        else
+        {
+            return insert_aux(position, x);
+        }
+    }
 };
 
 template <class T, class Alloc, size_t BufSize>
@@ -667,6 +691,52 @@ deque<T, Alloc, BufSize>::erase(iterator first, iterator last)
 
         return start + elemsBefore;
     }
+}
+
+template <class T, class Alloc, size_t BufSize>
+typename deque<T, Alloc, BufSize>::iterator
+deque<T, Alloc, BufSize>::insert_aux(iterator pos, const value_type &x)
+{
+    difference_type index = pos - start;
+    value_type xCopy = x;
+
+    if(index < size() / 2)
+    {
+        // 如果插入点之前的元素个数比较少
+        // 在最前端加入与第一个元素同值的元素
+        push_front(front());
+        iterator front1 = start;
+        ++front1;
+        iterator front2 = front1;
+        ++front2;
+        pos = start + index;  // 迭代器发生变化
+        iterator pos1 = pos;
+        ++pos1;
+        /* 可替换的代码，但效率更低
+        iterator front1 = start + 1;
+        iterator front2 = front1 + 1;
+        iterator pos1 = start + index + 1;
+        */
+        // 将元素向前移动一个位置
+        std::copy(front2, pos1, front1);
+    }
+    else
+    {
+        // 如果插入点之后的元素个数比较少
+        // 在尾端加入与最后一个元素同值的元素
+        push_back(back());
+        iterator back1 = finish;
+        --back1;
+        iterator back2 = back1;
+        --back2;
+        //pos = start + index;  // 迭代器发生变化
+        // 将元素向后移动一个位置
+        std::copy_backward(pos, back2, back1);
+    }
+
+    *pos = xCopy;
+
+    return pos;
 }
 
 }  // end of namespace mio
