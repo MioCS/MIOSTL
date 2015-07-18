@@ -1,9 +1,10 @@
 #ifndef MIO_VECTOR_H_INCLUDED
 #define MIO_VECTOR_H_INCLUDED
 
-#include "mio_alloc.h"
 #include <bits/stl_uninitialized.h>
 #include <bits/stl_construct.h>
+
+#include "mio_alloc.h"
 
 namespace mio
 {

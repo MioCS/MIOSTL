@@ -1,9 +1,10 @@
 #ifndef MIO_DEQUE_H_INCLUDED
 #define MIO_DEQUE_H_INCLUDED
 
-#include "mio_alloc.h"
 #include <iterator>
 #include <bits/stl_construct.h>
+
+#include "mio_alloc.h"
 
 namespace mio
 {
