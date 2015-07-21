@@ -188,6 +188,7 @@ public:
     typedef T value_type;
     typedef value_type* pointer;
     typedef T& reference;
+    typedef const T& const_reference;
     typedef __deque_iterator<T, T&, T*, BufSize> iterator;
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
@@ -241,7 +242,7 @@ public:
         return static_cast<size_type>(-1);  // size_type为无符号数
     }
 
-    bool empty()
+    bool empty() const
     {
         return finish == start;
     }
@@ -312,7 +313,7 @@ private:
 
 public:
     // constructor
-    deque(int n, const value_type &value)
+    deque(size_type n, const value_type &value)
     :start(), finish(), map(nullptr), mapSize(0)
     {
         fill_initialize(n, value);

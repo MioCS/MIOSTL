@@ -39,6 +39,8 @@
 		<Unit filename="mio_construct.h" />
 		<Unit filename="mio_deque.h" />
 		<Unit filename="mio_list.h" />
+		<Unit filename="mio_queue.h" />
+		<Unit filename="mio_stack.h" />
 		<Unit filename="mio_traits.h" />
 		<Unit filename="mio_type_traits.h" />
 		<Unit filename="mio_uninitialized.h" />
