@@ -74,8 +74,7 @@ void *__malloc_alloc_template<inst>::oom_malloc(size_t n)
         my_malloc_handler = __malloc_alloc_oom_handler;
         if(my_malloc_handler == nullptr)
         {
-            std::bad_alloc error;
-            throw error;
+            throw std::bad_alloc();
         }
         (*my_malloc_handler)();
 
@@ -98,8 +97,7 @@ void *__malloc_alloc_template<inst>::oom_realloc(void *p, size_t n)
         my_malloc_handler = __malloc_alloc_oom_handler;
         if(my_malloc_handler == nullptr)
         {
-            std::bad_alloc error;
-            throw error;
+            throw std::bad_alloc();
         }
         (*my_malloc_handler)();
 
