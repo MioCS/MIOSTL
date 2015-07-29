@@ -11,9 +11,16 @@ using namespace std;
 
 int main()
 {
-    std::vector<int> vec{3, 2, 4};
+    std::vector<int> vec{8, 7, 6, 5, 4, 3, 10};
 
     mio::push_heap(vec.begin(), vec.end());
+
+    for(const auto &i : vec)
+    {
+        cout << i << endl;
+    }
+
+    mio::pop_heap(vec.begin(), vec.end());
 
     for(const auto &i : vec)
     {
