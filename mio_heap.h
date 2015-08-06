@@ -6,6 +6,7 @@
 namespace mio
 {
 
+// 以下为push_heap()实现
 template <class RandomAccessIterator, class Distance, class T>
 void __push_heap(RandomAccessIterator first, Distance insertIndex,
                  Distance topIndex, T value)
@@ -42,6 +43,7 @@ inline void __adjust_heap(RandomAccessIterator first, Distance adjustIndex, Dist
     Distance topIndex = adjustIndex;
     Distance secondChild = topIndex * 2 + 2;  // 待调整节点的右孩子
 
+    // 将最后一个元素(出堆元素的前一个元素)之前的部分调整为大顶堆
     while(secondChild < len)
     {
         // 令secondChild指向待调整节点左右孩子中的较大者
@@ -62,9 +64,10 @@ inline void __adjust_heap(RandomAccessIterator first, Distance adjustIndex, Dist
         adjustIndex = secondChild - 1;
     }
 
-    *(first + adjustIndex) = value;
+    __push_heap(first, adjustIndex, topIndex, value);
 }
 
+// 以下为pop_heap()实现
 template <class RandomAccessIterator, class T, class Distance>
 inline void __pop_heap(RandomAccessIterator first, RandomAccessIterator last,
                        RandomAccessIterator result, T value, Distance*)
@@ -85,8 +88,48 @@ inline void pop_heap(RandomAccessIterator first, RandomAccessIterator last)
     __pop_heap_aux(first, last, value_type(first));
 }
 
+// 以下为sort_heap()实现
+template <class RandomAccessIterator>
+inline void sort_heap(RandomAccessIterator first, RandomAccessIterator last)
+{
+    while(last - first > 1)
+    {
+        pop_heap(first, last--);
+    }
+}
+
+// 以下为make_heap()实现
+template <class RandomAccessIterator, class T, class Distance>
+inline void __make_heap(RandomAccessIterator first, RandomAccessIterator last, T*, Distance*)
+{
+    if(last - first < 2)
+    {
+        // 长度为0或1无需重排
+        return;
+    }
+
+    Distance len = last - first;
+    Distance adjustIndex = (len - 2) / 2;
+
+    while(true)
+    {
+        //将以adjustIndex为首的树调整为大顶堆
+        __adjust_heap(first, adjustIndex, len, *(first + adjustIndex));
+
+        if(adjustIndex-- == 0)
+        {
+            // 调整至根节点时结束
+            break;
+        }
+    }
+}
+
+template <class RandomAccessIterator>
+inline void make_heap(RandomAccessIterator first, RandomAccessIterator last)
+{
+    __make_heap(first, last, value_type(first), distance_type(first));
+}
+
 }  // end of namespace std
-
-
 
 #endif // MIO_HEAP_H_INCLUDED
