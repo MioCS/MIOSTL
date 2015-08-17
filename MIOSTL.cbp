@@ -41,6 +41,7 @@
 		<Unit filename="mio_heap.h" />
 		<Unit filename="mio_iterator.h" />
 		<Unit filename="mio_list.h" />
+		<Unit filename="mio_priority_queue.h" />
 		<Unit filename="mio_queue.h" />
 		<Unit filename="mio_stack.h" />
 		<Unit filename="mio_traits.h" />

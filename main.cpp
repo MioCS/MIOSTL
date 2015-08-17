@@ -5,17 +5,27 @@
 #include <new>
 #include <iterator>
 
-#include "mio_heap.h"
+#include "mio_priority_queue.h"
 
 using namespace std;
 
 int main()
 {
-    vector<int> vec{1, 2, 3, 4, 5, 6};
+    vector<int> vec{1, 2, 3, 4, 5, 6, 7};
 
-    mio::make_heap(vec.begin(), vec.end());
+    //mio::make_heap(vec.begin(), vec.end());
 
-    for(const auto &i : vec)
+    mio::priority_queue<int, vector<int>> pq(vec.begin(), vec.end());
+
+    for(auto& i : pq.c)
+    {
+        cout << i << ends;
+    }
+    cout << endl;
+
+    pq.pop();
+
+    for(auto& i : pq.c)
     {
         cout << i << ends;
     }
