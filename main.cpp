@@ -6,6 +6,7 @@
 #include <iterator>
 
 #include "mio_priority_queue.h"
+#include "mio_slist.h"
 
 using namespace std;
 

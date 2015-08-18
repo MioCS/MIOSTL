@@ -43,6 +43,7 @@
 		<Unit filename="mio_list.h" />
 		<Unit filename="mio_priority_queue.h" />
 		<Unit filename="mio_queue.h" />
+		<Unit filename="mio_slist.h" />
 		<Unit filename="mio_stack.h" />
 		<Unit filename="mio_traits.h" />
 		<Unit filename="mio_type_traits.h" />

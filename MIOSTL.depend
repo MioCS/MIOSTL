@@ -23,7 +23,7 @@
 1426518252 source:d:\github\miostl\miostl\mio_vector.cpp
 	"mio_vector.h"
 
-1439803351 source:d:\github\miostl\main.cpp
+1439896996 source:d:\github\miostl\main.cpp
 	<iostream>
 	<vector>
 	<stack>
@@ -31,6 +31,7 @@
 	<new>
 	<iterator>
 	"mio_priority_queue.h"
+	"mio_slist.h"
 
 1437571346 d:\github\miostl\mio_allocator.h
 	<new>
@@ -79,4 +80,9 @@
 	<functional>
 	"mio_vector.h"
 	"mio_heap.h"
+
+1439898061 d:\github\miostl\mio_slist.h
+	<iterator>
+	<bits/stl_construct.h>
+	"mio_alloc.h"
 
